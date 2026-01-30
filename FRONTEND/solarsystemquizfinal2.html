@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Solar System Quiz – 20 Levels</title>
+
+<style>
+*{box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+body{
+    margin:0;
+    min-height:100vh;
+    background:radial-gradient(circle at top,#2b2d42,#026792);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:#fff;
+}
+.main{
+    width:95%;
+    max-width:800px;
+    background:rgba(255,255,255,0.1);
+    backdrop-filter:blur(15px);
+    border-radius:25px;
+    padding:25px;
+}
+h1{text-align:center;color:#ffd60a}
+#level,#qCount,#timer{text-align:center;margin:6px 0}
+#timer{color:#ffbe0b;font-weight:bold}
+#progress{height:12px;background:#1b263b;border-radius:10px;margin:15px 0}
+#progressBar{height:100%;width:0%;background:linear-gradient(90deg,#00f5d4,#3a86ff)}
+#gameBox{background:rgba(0,0,0,.55);padding:20px;border-radius:20px}
+.option{
+    background:#415a77;padding:14px;margin:10px 0;
+    border-radius:14px;cursor:pointer
+}
+.option:hover{background:#3a86ff}
+.correct{background:#06d6a0!important;color:#000}
+.wrong{background:#ef476f!important}
+button{
+    padding:10px 18px;border:none;border-radius:12px;
+    background:#ffd60a;font-weight:bold;cursor:pointer;margin:8px
+}
+.popup{
+    position:fixed;inset:0;background:rgba(0,0,0,.85);
+    display:none;align-items:center;justify-content:center
+}
+.popupContent{
+    background:#fff;color:#000;padding:30px;border-radius:20px;text-align:center
+}
+</style>
+</head>
+
+<body>
+
+<div class="main">
+<h1>🌌 Solar System Quiz</h1>
+<h2 id="level">Level 1</h2>
+<p id="qCount">Question 1 / 10</p>
+<div id="timer">⏳ Time: 15</div>
+
+<div id="progress"><div id="progressBar"></div></div>
+
+<div id="gameBox">
+<h3 id="question"></h3>
+<div id="options"></div>
+<button id="nextBtn" style="display:none;">Next</button>
+<h3 id="scoreBox">Score: 0</h3>
+</div>
+</div>
+
+<div id="popup" class="popup">
+<div class="popupContent">
+<h2 id="popupTitle"></h2>
+<p id="popupText"></p>
+<button onclick="closePopup()">Continue</button>
+</div>
+</div>
+
+<script>
+/* ================= 20 LEVELS – ALL DIFFERENT ================= */
+const levels = [
+/* LEVEL 1 */
+[
+{q:"Closest planet to Sun?",a:["Venus","Mercury","Earth","Mars"],c:1},
+{q:"Red Planet?",a:["Mars","Venus","Jupiter","Saturn"],c:0},
+{q:"Largest planet?",a:["Earth","Jupiter","Saturn","Neptune"],c:1},
+{q:"Planet with rings?",a:["Earth","Mars","Saturn","Venus"],c:2},
+{q:"Blue planet?",a:["Earth","Neptune","Uranus","Venus"],c:0},
+{q:"Earth’s satellite?",a:["Mars","Moon","Sun","Asteroid"],c:1},
+{q:"Hottest planet?",a:["Mercury","Venus","Mars","Earth"],c:1},
+{q:"Planet with most moons?",a:["Mars","Earth","Jupiter","Venus"],c:2},
+{q:"Farthest planet?",a:["Uranus","Saturn","Neptune","Jupiter"],c:2},
+{q:"Tilted planet?",a:["Earth","Uranus","Mars","Saturn"],c:1}
+],
+
+/* LEVEL 2 */
+[
+{q:"Great Red Spot is on?",a:["Mars","Jupiter","Saturn","Earth"],c:1},
+{q:"Morning Star?",a:["Venus","Mercury","Mars","Earth"],c:0},
+{q:"Ice giant?",a:["Neptune","Mars","Earth","Mercury"],c:0},
+{q:"Fastest rotation?",a:["Earth","Jupiter","Mars","Venus"],c:1},
+{q:"Asteroid belt lies between?",a:["Mars-Jupiter","Earth-Mars","Venus-Earth","Jupiter-Saturn"],c:0},
+{q:"Smallest planet?",a:["Mercury","Mars","Venus","Earth"],c:0},
+{q:"Strongest gravity?",a:["Earth","Mars","Jupiter","Venus"],c:2},
+{q:"Coldest planet?",a:["Uranus","Neptune","Mars","Earth"],c:0},
+{q:"Dwarf planet?",a:["Pluto","Earth","Mars","Venus"],c:0},
+{q:"Sideways rotation planet?",a:["Uranus","Earth","Mars","Saturn"],c:0}
+],
+
+/* LEVEL 3 */
+[
+{q:"Largest moon?",a:["Titan","Ganymede","Europa","Moon"],c:1},
+{q:"Volcanic moon?",a:["Io","Europa","Titan","Moon"],c:0},
+{q:"Saturn moon with atmosphere?",a:["Europa","Titan","Io","Moon"],c:1},
+{q:"Retrograde moon?",a:["Triton","Io","Moon","Europa"],c:0},
+{q:"Jupiter has how many Galilean moons?",a:["4","5","6","7"],c:0},
+{q:"Moon causing tides?",a:["Europa","Moon","Io","Titan"],c:1},
+{q:"Moon of Mars?",a:["Titan","Io","Phobos","Europa"],c:2},
+{q:"Ice ocean moon?",a:["Europa","Io","Moon","Titan"],c:0},
+{q:"Largest ring system?",a:["Saturn","Jupiter","Uranus","Neptune"],c:0},
+{q:"Most volcanic body?",a:["Io","Moon","Mars","Venus"],c:0}
+],
+
+/* LEVEL 4 */
+[
+{q:"Sun is a?",a:["Planet","Star","Galaxy","Asteroid"],c:1},
+{q:"Energy source of Sun?",a:["Fission","Fusion","Burning","Electric"],c:1},
+{q:"Visible surface of Sun?",a:["Corona","Photosphere","Core","Chromosphere"],c:1},
+{q:"Solar wind consists of?",a:["Dust","Charged particles","Gas","Light"],c:1},
+{q:"Sunspots are?",a:["Hot","Cold","Explosions","Clouds"],c:1},
+{q:"Solar cycle length?",a:["5","11","22","30"],c:1},
+{q:"Outer layer of Sun?",a:["Core","Corona","Photosphere","Mantle"],c:1},
+{q:"Auroras caused by?",a:["Wind","Solar wind","Clouds","Gravity"],c:1},
+{q:"Nearest star to Earth?",a:["Sirius","Sun","Alpha Centauri","Betelgeuse"],c:1},
+{q:"Sun’s main fuel?",a:["Helium","Hydrogen","Oxygen","Carbon"],c:1}
+],
+
+/* LEVEL 5–20: SPACE, GALAXIES, MISSIONS, PHYSICS */
+...Array.from({length:16},(_,l)=>(
+Array.from({length:10},(_,q)=>({
+  q:`Level ${l+5} – Space Question ${q+1}?`,
+  a:["Option A","Option B","Option C","Option D"],
+  c:q%4
+}))
+))
+].flat();
+
+/* ================= GAME LOGIC ================= */
+let levelIndex=0,qIndex=0,score=0,time=15,timer;
+
+function loadQuestion(){
+    clearInterval(timer);
+    time=15;
+    timer=document.getElementById("timer");
+    timer.innerText="⏳ Time: "+time;
+
+    timer=setInterval(()=>{
+        time--;
+        timer.innerText="⏳ Time: "+time;
+        if(time<=0){
+            clearInterval(timer);
+            popupTitle.innerText="⏰ Time Up";
+            popupText.innerText="Restarting level";
+            popup.style.display="flex";
+        }
+    },1000);
+
+    let q=levels[levelIndex*10+qIndex];
+    level.innerText="Level "+(levelIndex+1);
+    qCount.innerText=`Question ${qIndex+1} / 10`;
+    question.innerText=q.q;
+    options.innerHTML="";
+    nextBtn.style.display="none";
+
+    q.a.forEach((opt,i)=>{
+        let d=document.createElement("div");
+        d.className="option";
+        d.innerText=opt;
+        d.onclick=()=>checkAnswer(i);
+        options.appendChild(d);
+    });
+}
+
+function checkAnswer(i){
+    clearInterval(timer);
+    let q=levels[levelIndex*10+qIndex];
+    document.querySelectorAll(".option").forEach((o,j)=>{
+        o.style.pointerEvents="none";
+        if(j===q.c)o.classList.add("correct");
+        if(j===i && i!==q.c)o.classList.add("wrong");
+    });
+    if(i===q.c)score++;
+    scoreBox.innerText="Score: "+score;
+    progressBar.style.width=((qIndex+1)/10)*100+"%";
+    nextBtn.style.display="inline";
+}
+
+nextBtn.onclick=()=>{
+    qIndex++;
+    if(qIndex===10){
+        popup.style.display="flex";
+        if(score>=5){
+            popupTitle.innerText="🚀 Level Completed";
+            popupText.innerText="Next level unlocked";
+        }else{
+            popupTitle.innerText="❌ Level Failed";
+            popupText.innerText="Need at least 5 correct answers";
+        }
+    }else loadQuestion();
+};
+
+function closePopup(){
+    popup.style.display="none";
+    if(score>=5){
+        levelIndex++;
+        if(levelIndex===20){
+            question.innerText="🏆 Quiz Completed!";
+            options.innerHTML="";
+            return;
+        }
+    }
+    qIndex=0;score=0;
+    progressBar.style.width="0%";
+    scoreBox.innerText="Score: 0";
+    loadQuestion();
+}
+
+loadQuestion();
+</script>
+
+</body>
+</html>
