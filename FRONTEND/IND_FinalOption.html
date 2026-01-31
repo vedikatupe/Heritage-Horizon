@@ -141,63 +141,35 @@
             <div class="card-img-placeholder">🔍</div>
             <h3>Word Puzzle Hunt</h3>
             <p>Find hidden words related to monuments, empires, and ancient poets.</p>
-            <button class="btn">Explore</button>
+           <a href="wordpuzzleH.html" class="btn">Explore</a>
+
+            
         </div>
 
         <div class="card" onclick="playGame('Maze')">
             <div class="card-img-placeholder">🏛️</div>
             <h3>Heritage Maze</h3>
             <p>Navigate the labyrinthine corridors of India's historic hill forts.</p>
-            <button class="btn">Explore</button>
+            <a href="IND_FinalMaze1.html" class="btn">Explore</a>
         </div>
 
         <div class="card" onclick="playGame('Quiz')">
             <div class="card-img-placeholder">📜</div>
             <h3>Heritage Quiz</h3>
             <p>A test of wisdom regarding our culture, festivals, and sacred sites.</p>
-            <button class="btn">Explore</button>
+            <a href="IND_finalQuiz.html" class="btn">Explore</a>
         </div>
 
         <div class="card" onclick="playGame('Cards')">
             <div class="card-img-placeholder">🃏</div>
             <h3>Ancient Cards</h3>
             <p>Match the symbols of Indian royalty and traditional art forms.</p>
-            <button class="btn">Explore</button>
+            <a href="InFINALCARD.html" class="btn">Explore</a>
         </div>
     </div>
 
-    <footer>
-        BHARAT HERITAGE SERIES © 2026
-    </footer>
+   
 
-    <script>
-        function playGame(game) {
-            let question = "";
-            
-            // "Do you know" Logic
-            switch(game) {
-                case 'Word Puzzle Hunt':
-                    question = "Do you know which language is known as the 'Mother of all Languages' in India?";
-                    break;
-                case 'Maze':
-                    question = "Do you know which fort is known as the 'Gibraltar of the East'?";
-                    break;
-                case 'Quiz':
-                    question = "Do you know how many UNESCO World Heritage Sites are in India?";
-                    break;
-                case 'Cards':
-                    question = "Do you know which ancient game originated in India as 'Chaturanga'?";
-                    break;
-            }
-
-            const ready = confirm("Do you know...?\n\n" + question + "\n\nClick OK to enter the " + game + ".");
-            
-            if (ready) {
-                alert("Entering the " + game + " arena...");
-                // Redirect logic would go here:
-                // window.location.href = game.toLowerCase().replace(/ /g, "-") + ".html";
-            }
-        }
-    </script>
+    
 </body>
 </html>

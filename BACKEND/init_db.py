@@ -93,3 +93,10 @@ def init_database():
 
 if __name__ == "__main__":
     init_database()
+    # Add functions to:
+# - create user
+# - validate login
+# - save game score
+# - fetch user scores
+# Use SQLite and game_scores.db
+
