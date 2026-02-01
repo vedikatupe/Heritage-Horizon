@@ -1,70 +1,190 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for, session, abort
+import sqlite3
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
+import os
 
+# ---------------- CONFIG ----------------
 app = Flask(
     __name__,
-    template_folder="../FRONTEND",
-    static_folder="../FRONTEND"
+    template_folder="FRONTEND",
+    static_folder="FRONTEND"
 )
 
-# ---------------- SPLASH / TITLE PAGE ----------------
+app.secret_key = "super_secret_key_change_later"
+DB_NAME = "app.db"
+
+# ---------------- DATABASE ----------------
+def get_db():
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS quiz_scores (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            quiz_name TEXT,
+            score INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+# ---------------- AUTH DECORATOR ----------------
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# ---------------- ROUTES ----------------
+
 @app.route("/")
-def splash():
-    return render_template("TITLEPAGE.HTML")
+def title():
+    return render_template("titlepage.html")
 
-
-# ---------------- COMMON FLOW ----------------
 @app.route("/slide")
 def slide():
-    return render_template("SLIDE2.HTML")
+    return render_template("slide2.html")
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    return render_template("FSLOGIN.HTML")
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        conn = get_db()
+        user = conn.execute(
+            "SELECT * FROM users WHERE username = ?",
+            (username,)
+        ).fetchone()
+        conn.close()
+
+        if user and check_password_hash(user["password"], password):
+            session["user_id"] = user["id"]
+            session["username"] = user["username"]
+            return redirect(url_for("dashboard"))
+
+        return render_template("FSLOGIN.html", error="Invalid credentials")
+
+    return render_template("FSLOGIN.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
 
 @app.route("/dashboard")
+@login_required
 def dashboard():
-    return render_template("DASHBOARD.HTML")
+    return render_template("dashboard.html")
 
+# ---------------- GAME / CONTENT ROUTES ----------------
 
-# ---------------- UNIVERSE MODULE ----------------
-@app.route("/universe/quiz")
-def universe_quiz():
-    return render_template("solarquiz.html")
+@app.route("/optionsspace")
+@login_required
+def optionsspace():
+    return render_template("optionsspace.html")
 
-@app.route("/universe/asteroid")
-def universe_asteroid():
-    return render_template("solarasteriod.html")
-
-@app.route("/universe/wordpuzzle")
-def universe_wordpuzzle():
-    return render_template("solarwordpuzzle.html")
-
-@app.route("/universe/crush")
-def universe_crush():
-    return render_template("solarcrush.html")
-
-@app.route("/universe/doyouknow")
-def universe_doyouknow():
-    return render_template("solardoyouknow.html")
-
-
-# ---------------- HERITAGE MODULE ----------------
-@app.route("/heritage/wordpuzzle")
-def heritage_wordpuzzle():
-    return render_template("wordpuzzleH.html")
-
-@app.route("/heritage/maze")
-def heritage_maze():
+@app.route("/maze")
+@login_required
+def maze():
     return render_template("IND_FinalMaze1.html")
 
-@app.route("/heritage/quiz")
-def heritage_quiz():
+@app.route("/option")
+@login_required
+def option():
+    return render_template("IND_FinalOption.html")
+
+@app.route("/finalcard")
+@login_required
+def finalcard():
+    return render_template("INFINALCARD.html")
+
+@app.route("/solarquiz", methods=["GET", "POST"])
+@login_required
+def solarquiz():
+    if request.method == "POST":
+        score = request.form.get("score", 0)
+        conn = get_db()
+        conn.execute(
+            "INSERT INTO quiz_scores (user_id, quiz_name, score) VALUES (?, ?, ?)",
+            (session["user_id"], "solarquiz", score)
+        )
+        conn.commit()
+        conn.close()
+    return render_template("solarquiz.html")
+
+@app.route("/finalquiz", methods=["GET", "POST"])
+@login_required
+def finalquiz():
+    if request.method == "POST":
+        score = request.form.get("score", 0)
+        conn = get_db()
+        conn.execute(
+            "INSERT INTO quiz_scores (user_id, quiz_name, score) VALUES (?, ?, ?)",
+            (session["user_id"], "finalquiz", score)
+        )
+        conn.commit()
+        conn.close()
     return render_template("IND_finalQuiz.html")
 
-@app.route("/heritage/cards")
-def heritage_cards():
-    return render_template("InFINALCARD.html")
+@app.route("/solarasteroid")
+@login_required
+def solarasteroid():
+    return render_template("solaraseroid.html")
 
+@app.route("/solarcrush")
+@login_required
+def solarcrush():
+    return render_template("solarcrush.html")
 
+@app.route("/solardoyouknow")
+@login_required
+def solardoyouknow():
+    return render_template("solardoyouknow.html")
+
+@app.route("/solarpuzzle")
+@login_required
+def solarpuzzle():
+    return render_template("solarpuzzle.html")
+
+@app.route("/solarwordpuzzle")
+@login_required
+def solarwordpuzzle():
+    return render_template("solarwordpuzzle.html")
+
+@app.route("/wordpuzzle")
+@login_required
+def wordpuzzle():
+    return render_template("wordpuzzle.html")
+
+# ---------------- ERROR HANDLING ----------------
+@app.errorhandler(404)
+def page_not_found(e):
+    return "<h1>404 - Page Not Found</h1>", 404
+
+# ---------------- MAIN ----------------
 if __name__ == "__main__":
+    if not os.path.exists(DB_NAME):
+        init_db()
+        print("Database created")
+
     app.run(debug=True)
